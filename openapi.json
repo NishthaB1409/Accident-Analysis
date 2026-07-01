@@ -1,0 +1,1577 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "UnfallAtlas API",
+        "description": "German road accident open data integration service",
+        "license": {
+            "name": "Datenlizenz Deutschland – Namensnennung – Version 2.0",
+            "url": "https://www.govdata.de/dl-de/by-2-0"
+        },
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/health": {
+            "get": {
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "description": "Checks API and database connectivity.",
+                "operationId": "health_health_get",
+                "responses": {
+                    "200": {
+                        "description": "Healthy",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    },
+                                    "type": "object",
+                                    "title": "Response Health Health Get"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unavailable"
+                    }
+                }
+            }
+        },
+        "/regions": {
+            "get": {
+                "tags": [
+                    "Regions"
+                ],
+                "summary": "List regions",
+                "description": "Lists administrative regions with filters.",
+                "operationId": "regions_regions_get",
+                "parameters": [
+                    {
+                        "name": "level",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "enum": [
+                                        "state",
+                                        "district",
+                                        "municipality"
+                                    ],
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Level"
+                        }
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Name"
+                        }
+                    },
+                    {
+                        "name": "ags",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Ags"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1,
+                            "title": "Page"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 500,
+                            "minimum": 1,
+                            "default": 100,
+                            "title": "Page Size"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Regions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedResponse_RegionSchema_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid query"
+                    }
+                }
+            }
+        },
+        "/regions/{ags}": {
+            "get": {
+                "tags": [
+                    "Regions"
+                ],
+                "summary": "Get region",
+                "description": "Gets one region by AGS.",
+                "operationId": "region_regions__ags__get",
+                "parameters": [
+                    {
+                        "name": "ags",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Ags"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Region",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/APIResponse_RegionSchema_"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accidents/count": {
+            "get": {
+                "tags": [
+                    "Accidents"
+                ],
+                "summary": "Count accidents",
+                "description": "Counts accidents matching supplied filters.",
+                "operationId": "count_accidents_count_get",
+                "parameters": [
+                    {
+                        "name": "state_ags",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "pattern": "^\\d{2}$"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "State Ags"
+                        }
+                    },
+                    {
+                        "name": "district_ags",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "pattern": "^\\d{5}$"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "District Ags"
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "maximum": 2030,
+                                    "minimum": 2016
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Year"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "maximum": 12,
+                                    "minimum": 1
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Month"
+                        }
+                    },
+                    {
+                        "name": "weekday",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "maximum": 7,
+                                    "minimum": 1
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Weekday"
+                        }
+                    },
+                    {
+                        "name": "hour",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "maximum": 23,
+                                    "minimum": 0
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Hour"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "maximum": 3,
+                                    "minimum": 1
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Category"
+                        }
+                    },
+                    {
+                        "name": "ist_rad",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Ist Rad"
+                        }
+                    },
+                    {
+                        "name": "ist_fuss",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Ist Fuss"
+                        }
+                    },
+                    {
+                        "name": "ist_krad",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Ist Krad"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Count",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/APIResponse_AccidentCountResponse_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid filter"
+                    }
+                }
+            }
+        },
+        "/accidents": {
+            "get": {
+                "tags": [
+                    "Accidents"
+                ],
+                "summary": "List accidents",
+                "description": "Lists point-level accidents matching supplied filters.",
+                "operationId": "accidents_accidents_get",
+                "parameters": [
+                    {
+                        "name": "state_ags",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "pattern": "^\\d{2}$"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "State Ags"
+                        }
+                    },
+                    {
+                        "name": "district_ags",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "pattern": "^\\d{5}$"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "District Ags"
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "maximum": 2030,
+                                    "minimum": 2016
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Year"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "maximum": 12,
+                                    "minimum": 1
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Month"
+                        }
+                    },
+                    {
+                        "name": "weekday",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "maximum": 7,
+                                    "minimum": 1
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Weekday"
+                        }
+                    },
+                    {
+                        "name": "hour",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "maximum": 23,
+                                    "minimum": 0
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Hour"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "maximum": 3,
+                                    "minimum": 1
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Category"
+                        }
+                    },
+                    {
+                        "name": "ist_rad",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Ist Rad"
+                        }
+                    },
+                    {
+                        "name": "ist_fuss",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Ist Fuss"
+                        }
+                    },
+                    {
+                        "name": "ist_krad",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Ist Krad"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1,
+                            "title": "Page"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 500,
+                            "minimum": 1,
+                            "default": 100,
+                            "title": "Page Size"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Accidents",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedResponse_AccidentSchema_"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid filter"
+                    }
+                }
+            }
+        },
+        "/aggregates/accidents": {
+            "get": {
+                "tags": [
+                    "Aggregates"
+                ],
+                "summary": "Aggregate accidents",
+                "description": "Groups accident counts by region.",
+                "operationId": "aggregates_aggregates_accidents_get",
+                "parameters": [
+                    {
+                        "name": "level",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "enum": [
+                                "state",
+                                "district"
+                            ],
+                            "type": "string",
+                            "title": "Level"
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "maximum": 2030,
+                                    "minimum": 2016
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Year"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "maximum": 3,
+                                    "minimum": 1
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Category"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Aggregates",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/APIResponse_list_dict_str__object___"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid filter"
+                    }
+                }
+            }
+        },
+        "/aggregates/rates": {
+            "get": {
+                "tags": [
+                    "Aggregates"
+                ],
+                "summary": "Rank accident rates",
+                "description": "Ranks cross-source accident rates per 100,000 residents.",
+                "operationId": "rates_aggregates_rates_get",
+                "parameters": [
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 2030,
+                            "minimum": 2016,
+                            "title": "Year"
+                        }
+                    },
+                    {
+                        "name": "level",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "enum": [
+                                "state",
+                                "district"
+                            ],
+                            "type": "string",
+                            "default": "district",
+                            "title": "Level"
+                        }
+                    },
+                    {
+                        "name": "top_n",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1,
+                            "default": 10,
+                            "title": "Top N"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rates",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/APIResponse_list_dict_str__object___"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid filter"
+                    }
+                }
+            }
+        },
+        "/aggregates/rate-comparison": {
+            "get": {
+                "tags": [
+                    "Aggregates"
+                ],
+                "summary": "Compare accident rates",
+                "description": "Compares calculated accident rates with Regionalstatistik published rates.",
+                "operationId": "compare_rates_aggregates_rate_comparison_get",
+                "parameters": [
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 2030,
+                            "minimum": 2016,
+                            "default": 2023,
+                            "title": "Year"
+                        }
+                    },
+                    {
+                        "name": "top_n",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 100,
+                            "minimum": 1,
+                            "default": 10,
+                            "title": "Top N"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rate comparison",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/APIResponse_list_dict_str__object___"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid filter"
+                    }
+                }
+            }
+        },
+        "/time/earliest": {
+            "get": {
+                "tags": [
+                    "Time"
+                ],
+                "summary": "Earliest accident year",
+                "description": "Returns earliest available accident year.",
+                "operationId": "earliest_time_earliest_get",
+                "parameters": [
+                    {
+                        "name": "state_ags",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "pattern": "^\\d{2}$"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "State Ags"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Earliest year",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/APIResponse_dict_str__object__"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No data"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/time/coverage": {
+            "get": {
+                "tags": [
+                    "Time"
+                ],
+                "summary": "State year coverage",
+                "description": "Returns temporal coverage by state.",
+                "operationId": "coverage_time_coverage_get",
+                "responses": {
+                    "200": {
+                        "description": "Coverage",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/APIResponse_list_dict_str__object___"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No data"
+                    }
+                }
+            }
+        },
+        "/indicators": {
+            "get": {
+                "tags": [
+                    "Indicators"
+                ],
+                "summary": "List indicators",
+                "description": "Lists indicator metadata.",
+                "operationId": "indicators_indicators_get",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1,
+                            "title": "Page"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 500,
+                            "minimum": 1,
+                            "default": 100,
+                            "title": "Page Size"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Indicators",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedResponse_dict_str__object__"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid pagination"
+                    }
+                }
+            }
+        },
+        "/indicators/values": {
+            "get": {
+                "tags": [
+                    "Indicators"
+                ],
+                "summary": "List indicator values",
+                "description": "Lists indicator values joined to regions.",
+                "operationId": "values_indicators_values_get",
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Code"
+                        }
+                    },
+                    {
+                        "name": "ags",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Ags"
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "title": "Year"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1,
+                            "title": "Page"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 500,
+                            "minimum": 1,
+                            "default": 100,
+                            "title": "Page Size"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Values",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedResponse_dict_str__object__"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid filter"
+                    }
+                }
+            }
+        },
+        "/metadata/sources": {
+            "get": {
+                "tags": [
+                    "Metadata"
+                ],
+                "summary": "List source imports",
+                "description": "Lists ETL provenance records.",
+                "operationId": "sources_metadata_sources_get",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1,
+                            "title": "Page"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "maximum": 500,
+                            "minimum": 1,
+                            "default": 100,
+                            "title": "Page Size"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Import runs",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedResponse_dict_str__object__"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid pagination"
+                    }
+                }
+            }
+        },
+        "/": {
+            "get": {
+                "summary": "API index",
+                "description": "Returns links to the API documentation and health endpoint.",
+                "operationId": "index__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    },
+                                    "type": "object",
+                                    "title": "Response Index  Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "APIResponse_AccidentCountResponse_": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/AccidentCountResponse"
+                    },
+                    "license": {
+                        "type": "string",
+                        "title": "License",
+                        "default": "Datenlizenz Deutschland – Namensnennung – Version 2.0"
+                    },
+                    "sources": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Sources"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "data",
+                    "sources"
+                ],
+                "title": "APIResponse[AccidentCountResponse]"
+            },
+            "APIResponse_RegionSchema_": {
+                "properties": {
+                    "data": {
+                        "$ref": "#/components/schemas/RegionSchema"
+                    },
+                    "license": {
+                        "type": "string",
+                        "title": "License",
+                        "default": "Datenlizenz Deutschland – Namensnennung – Version 2.0"
+                    },
+                    "sources": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Sources"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "data",
+                    "sources"
+                ],
+                "title": "APIResponse[RegionSchema]"
+            },
+            "APIResponse_dict_str__object__": {
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "title": "Data"
+                    },
+                    "license": {
+                        "type": "string",
+                        "title": "License",
+                        "default": "Datenlizenz Deutschland – Namensnennung – Version 2.0"
+                    },
+                    "sources": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Sources"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "data",
+                    "sources"
+                ],
+                "title": "APIResponse[dict[str, object]]"
+            },
+            "APIResponse_list_dict_str__object___": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "type": "object"
+                        },
+                        "type": "array",
+                        "title": "Data"
+                    },
+                    "license": {
+                        "type": "string",
+                        "title": "License",
+                        "default": "Datenlizenz Deutschland – Namensnennung – Version 2.0"
+                    },
+                    "sources": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Sources"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "data",
+                    "sources"
+                ],
+                "title": "APIResponse[list[dict[str, object]]]"
+            },
+            "AccidentCountResponse": {
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "title": "Count"
+                    },
+                    "filters_applied": {
+                        "type": "object",
+                        "title": "Filters Applied"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "count",
+                    "filters_applied"
+                ],
+                "title": "AccidentCountResponse",
+                "description": "Filtered accident count."
+            },
+            "AccidentSchema": {
+                "properties": {
+                    "accident_id": {
+                        "type": "integer",
+                        "title": "Accident Id"
+                    },
+                    "source_id": {
+                        "type": "string",
+                        "title": "Source Id"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "title": "Year"
+                    },
+                    "month": {
+                        "type": "integer",
+                        "title": "Month"
+                    },
+                    "hour": {
+                        "type": "integer",
+                        "title": "Hour"
+                    },
+                    "weekday": {
+                        "type": "integer",
+                        "title": "Weekday"
+                    },
+                    "category": {
+                        "type": "integer",
+                        "title": "Category"
+                    },
+                    "accident_type": {
+                        "type": "integer",
+                        "title": "Accident Type"
+                    },
+                    "light_condition": {
+                        "type": "integer",
+                        "title": "Light Condition"
+                    },
+                    "ist_rad": {
+                        "type": "boolean",
+                        "title": "Ist Rad"
+                    },
+                    "ist_pkw": {
+                        "type": "boolean",
+                        "title": "Ist Pkw"
+                    },
+                    "ist_fuss": {
+                        "type": "boolean",
+                        "title": "Ist Fuss"
+                    },
+                    "ist_krad": {
+                        "type": "boolean",
+                        "title": "Ist Krad"
+                    },
+                    "lon": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Lon"
+                    },
+                    "lat": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Lat"
+                    },
+                    "region_ags": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Region Ags"
+                    },
+                    "region_name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Region Name"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "accident_id",
+                    "source_id",
+                    "year",
+                    "month",
+                    "hour",
+                    "weekday",
+                    "category",
+                    "accident_type",
+                    "light_condition",
+                    "ist_rad",
+                    "ist_pkw",
+                    "ist_fuss",
+                    "ist_krad",
+                    "lon",
+                    "lat",
+                    "region_ags",
+                    "region_name"
+                ],
+                "title": "AccidentSchema",
+                "description": "Accident API representation."
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "PaginatedResponse_AccidentSchema_": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/AccidentSchema"
+                        },
+                        "type": "array",
+                        "title": "Data"
+                    },
+                    "total": {
+                        "type": "integer",
+                        "title": "Total"
+                    },
+                    "page": {
+                        "type": "integer",
+                        "title": "Page"
+                    },
+                    "page_size": {
+                        "type": "integer",
+                        "title": "Page Size"
+                    },
+                    "license": {
+                        "type": "string",
+                        "title": "License",
+                        "default": "Datenlizenz Deutschland – Namensnennung – Version 2.0"
+                    },
+                    "sources": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Sources"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "data",
+                    "total",
+                    "page",
+                    "page_size",
+                    "sources"
+                ],
+                "title": "PaginatedResponse[AccidentSchema]"
+            },
+            "PaginatedResponse_RegionSchema_": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "$ref": "#/components/schemas/RegionSchema"
+                        },
+                        "type": "array",
+                        "title": "Data"
+                    },
+                    "total": {
+                        "type": "integer",
+                        "title": "Total"
+                    },
+                    "page": {
+                        "type": "integer",
+                        "title": "Page"
+                    },
+                    "page_size": {
+                        "type": "integer",
+                        "title": "Page Size"
+                    },
+                    "license": {
+                        "type": "string",
+                        "title": "License",
+                        "default": "Datenlizenz Deutschland – Namensnennung – Version 2.0"
+                    },
+                    "sources": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Sources"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "data",
+                    "total",
+                    "page",
+                    "page_size",
+                    "sources"
+                ],
+                "title": "PaginatedResponse[RegionSchema]"
+            },
+            "PaginatedResponse_dict_str__object__": {
+                "properties": {
+                    "data": {
+                        "items": {
+                            "type": "object"
+                        },
+                        "type": "array",
+                        "title": "Data"
+                    },
+                    "total": {
+                        "type": "integer",
+                        "title": "Total"
+                    },
+                    "page": {
+                        "type": "integer",
+                        "title": "Page"
+                    },
+                    "page_size": {
+                        "type": "integer",
+                        "title": "Page Size"
+                    },
+                    "license": {
+                        "type": "string",
+                        "title": "License",
+                        "default": "Datenlizenz Deutschland – Namensnennung – Version 2.0"
+                    },
+                    "sources": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Sources"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "data",
+                    "total",
+                    "page",
+                    "page_size",
+                    "sources"
+                ],
+                "title": "PaginatedResponse[dict[str, object]]"
+            },
+            "RegionSchema": {
+                "properties": {
+                    "region_id": {
+                        "type": "integer",
+                        "title": "Region Id"
+                    },
+                    "ags": {
+                        "type": "string",
+                        "title": "Ags"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "level": {
+                        "type": "string",
+                        "title": "Level"
+                    },
+                    "population": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Population"
+                    },
+                    "parent_ags": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Parent Ags"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "region_id",
+                    "ags",
+                    "name",
+                    "level",
+                    "population"
+                ],
+                "title": "RegionSchema",
+                "description": "Region API representation."
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        }
+    }
+}
